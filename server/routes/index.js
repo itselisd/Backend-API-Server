@@ -4,7 +4,7 @@ const pg = require('pg');
 const connectionString = 'postgres://localhost:5432/videoDB';
 
 router.get('/users/:user_id', (req, res, next) => {
-  // return country, videos uploaded, videos liked
+  // return uid, country, videos uploaded, watched, and liked
   const id = req.params.user_id;
 
   const result = {
@@ -44,6 +44,7 @@ router.get('/users/:user_id', (req, res, next) => {
     query3.on('row', row => result.videos_watched.push(row.video_id));
     query4.on('row', row => result.videos_liked.push(row.video_id));
 
+    // Processing handler for multiple queries
     function endHandler () {
       count--; // decrement count by 1
       if (count === 0) {
@@ -64,7 +65,6 @@ router.patch('/users/:user_id', (req, res, next) => {
   const country = req.body.country;
   // Get a Postgres client from the connection pool
   pg.connect(connectionString, (err, client, done) => {
-    // Handle connection errors
     if(err) {
       done();
       console.log(err);
@@ -80,12 +80,8 @@ router.patch('/users/:user_id', (req, res, next) => {
 });
 
 router.delete('/users/:user_id', (req, res, next) => {
-  const results = [];
-  // Grab data from the URL parameters
   const id = req.params.user_id;
-  // Get a Postgres client from the connection pool
   pg.connect(connectionString, (err, client, done) => {
-    // Handle connection errors
     if(err) {
       done();
       console.log(err);
@@ -96,29 +92,14 @@ router.delete('/users/:user_id', (req, res, next) => {
     query.on('end', () => {
       return res.status(200).json({success: true, data: `User with id ${id} deleted from DB`});
     });
-
-
-    // // SQL Query > Select Data
-    // var query = client.query('SELECT * FROM users ORDER BY id ASC');
-    // // Stream results back one row at a time
-    // query.on('row', (row) => {
-    //   results.push(row);
-    // });
-    // // After all data is returned, close connection and return results
-    // query.on('end', () => {
-    //   done();
-    //   return res.json(results);
-    // });
   });
 });
 
 router.post('/users', (req, res, next) => {
-  // Grab data from http request
   const country = req.body.country;
   const results = {user_id: null, country: country};
 
   pg.connect(connectionString, (err, client, done) => {
-    // Handle connection errors
     if(err) {
       done();
       console.log(err);
@@ -141,23 +122,22 @@ router.post('/users', (req, res, next) => {
 });
 
 router.get('/videos/:video_id', (req, res, next) => {
-  const results = [];
   const id = req.params.video_id;
-  // Get a Postgres client from the connection pool
+  const results = {id: id, total_views: 0, views_by_country: {}};
   pg.connect(connectionString, (err, client, done) => {
-    // Handle connection errors
     if(err) {
       done();
       console.log(err);
       return res.status(500).json({success: false, data: err});
     }
-    // SQL Query > Select Data
-    const query = client.query('SELECT user_id FROM user_watched ORDER BY num_views DESC LIMIT 5');
-    // Stream results back one row at a time
+    const query = client.query(
+      `select count(users.user_id) as numWatched, users.country as userCountry
+      from users INNER JOIN user_watched on users.user_id = user_watched.user_id
+      where user_watched.video_id=($1) group by userCountry`, [id]);
     query.on('row', (row) => {
-      results.push(row);
+      results.total_views += parseInt(row.numwatched, 10);
+      results.views_by_country[row.usercountry] = parseInt(row.numwatched, 10);
     });
-    // After all data is returned, close connection and return results
     query.on('end', () => {
       done();
       return res.json(results);
@@ -169,19 +149,15 @@ router.get('/countries/:name', (req, res, next) => {
   const country = req.params.name;
   const results = {country: country, total_users: null, user_ids:[]};
   pg.connect(connectionString, (err, client, done) => {
-    // Handle connection errors
     if(err) {
       done();
       console.log(err);
       return res.status(500).json({success: false, data: err});
     }
-    // SQL Query > Select Data
     const query = client.query(`SELECT user_id FROM users WHERE country=($1)`, [country]);
-    // Stream results back one row at a time
     query.on('row', (row) => {
       results.user_ids.push(row.user_id);
     });
-    // After all data is returned, close connection and return results
     query.on('end', () => {
       results.total_users = results.user_ids.length;
       done();
@@ -192,21 +168,17 @@ router.get('/countries/:name', (req, res, next) => {
 
 router.get('/top', (req, res, next) => {
   const results = {video_ids:[]}
-  // Get a Postgres client from the connection pool
   pg.connect(connectionString, (err, client, done) => {
-    // Handle connection errors
     if(err) {
       done();
       console.log(err);
       return res.status(500).json({success: false, data: err});
     }
-    // SQL Query > Select Data
+    // order videos by count of highest frequency grouped video ids, returns top five in descending order
     const query = client.query('SELECT video_id, COUNT(*) FROM user_watched GROUP BY video_id ORDER BY 2 DESC LIMIT 5');
-    // Stream results back one row at a time
     query.on('row', (row) => {
       results.video_ids.push(row.video_id);
     });
-    // After all data is returned, close connection and return results
     query.on('end', () => {
       done();
       return res.json(results);
