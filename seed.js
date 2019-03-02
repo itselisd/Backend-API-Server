@@ -44,7 +44,7 @@ lineReader.on('line', function (line) {
       stream.write("INSERT INTO users (user_id, country) VALUES (" + tokens[2] + ", '" + tokens[3] + "');\n");
       break;
     case "UPLOAD":
-      stream.write("INSERT INTO videos (video_id, user_id) VALUES (" + tokens[2] + ", " + tokens[3] + ");\n");
+      stream.write("INSERT INTO videos (user_id, video_id) VALUES (" + tokens[2] + ", " + tokens[3] + ");\n");
       break;
     case "WATCH":
       stream.write("INSERT INTO user_watched (user_id, video_id) VALUES (" + tokens[2] + ", " + tokens[3] + ");\n");
