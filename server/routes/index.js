@@ -57,7 +57,7 @@ router.patch('/users/:user_id', (req, res, next) => {
     client.query('UPDATE users SET country=($1) WHERE id=($2)',
     [data.country, id]);
     // SQL Query > Select Data
-    const query = client.query("SELECT * FROM users ORDER BY id ASC");
+    const query = client.query('SELECT * FROM users ORDER BY id ASC');
     // Stream results back one row at a time
     query.on('row', (row) => {
       results.push(row);
@@ -189,7 +189,7 @@ router.get('/top', (req, res, next) => {
       return res.status(500).json({success: false, data: err});
     }
     // SQL Query > Select Data
-    const query = client.query('SELECT video_id FROM user_watched ORDER BY num_views DESC LIMIT 5');
+    const query = client.query('video_id, COUNT(*) FROM user_watched GROUP BY video_id ORDER BY 2 DESC LIMIT 5');
     // Stream results back one row at a time
     query.on('row', (row) => {
       results.push(row);
