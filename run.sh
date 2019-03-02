@@ -1,16 +1,28 @@
 #! /bin/bash
 
-# echo "Installing packages..."
-# npm install
+echo "Installing packages..."
+npm install
 
-createdb videoDB
+if [ -e seedfile.sql ]
+then
+    echo "Database already seeded. Would you like to re-seed? (Y/N)"
+	read answer
+	if [[ $answer = "Y" || $answer = "y" ]]; then
+			echo "Seeding the database... Please wait a few minutes..."
+			rm seedfile.sql
+			node seed.js
+			psql -d videoDB -f ./seedfile.sql > logging.txt
+	else
+		echo "Got it. "
+	fi
+else
+	echo "Seeding the database... Please wait a few minutes..."
+	createdb videoDB
+	node seed.js
+	psql -d videoDB -f ./seedfile.sql > logging.txt
+fi
 
-echo "Seeding the database... Please wait a few minutes..."
-rm seedfile.sql
-node seed.js
-psql -d videoDB -f ./seedfile.sql > logging.txt
+echo "Starting server..."
+npm start
 
-# echo "Starting server..."
-# npm start
-
-echo "Done!"
+echo "Bye!"
