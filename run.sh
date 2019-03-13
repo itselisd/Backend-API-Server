@@ -7,7 +7,7 @@ sudo -u postgres createuser vagrant
 
 if [ -e seedfile.sql ]
 then
-    echo "Database may already seeded. Would you like to re-seed? (Y/N)"
+    echo "Would you like to seed the database? (Y/N)"
 	read answer
 	if [[ $answer = "Y" || $answer = "y" ]]; then
 			echo "Seeding the database... Please wait a few minutes..."
@@ -19,7 +19,7 @@ then
 	fi
 else
 	echo "Seeding the database... Please wait a few minutes..."
-	sudo -u postgres createdb -0 vagrant videoDB
+	sudo -u postgres createdb -O vagrant videoDB
 	node seed.js
 	psql -d videoDB -f ./seedfile.sql > logging.txt
 fi
