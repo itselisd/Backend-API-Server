@@ -3,7 +3,7 @@
 echo "Installing packages..."
 npm install
 
-sudo -u postgres createuser balickid
+sudo -u postgres createuser <insertname>
 
 if [ -e seedfile.sql ]
 then
@@ -19,7 +19,7 @@ then
 	fi
 else
 	echo "Seeding the database... Please wait a few minutes..."
-	sudo -u postgres createdb -O balickid videoDB
+	sudo -u postgres createdb -O <insertname> videoDB
 	node seed.js
 	psql -d videoDB -f ./seedfile.sql > logging.txt
 fi
