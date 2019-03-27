@@ -4,5 +4,4 @@ To install packages, create and seed the database using the svc_data file, run â
 Machine must have PostgreSQL, NPM, and NodeJS installed.
 Guide to install postgres on ubuntu: https://www.techrepublic.com/blog/diy-it-guy/diy-a-postgresql-database-server-setup-anyone-can-handle/
 
-# Anything else you want to share about your solution or the problem :)
 In order to run service, Postgres, NPM, and Node must all be installed on the target machine.
